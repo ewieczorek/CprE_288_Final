@@ -4,10 +4,9 @@
 #include "timer.h"
 #include "adc.h"
 #include <stdbool.h>
-#include "driverlib/interrupt.h"
 #include "button.h"
 #include "servo.h"
-
+#include <inc/tm4c123gh6pm.h>
 #include "math.h"
 
 
@@ -15,11 +14,12 @@ float curr_angle;
 bool clockwise = true;
 uint32_t pulse_period = 0x4E200; // pulse period in cycles\
 
-float cybot_m = 150;
-float cybot_b = 8200;
+float cybot_m = 150 * 1.096;
+float cybot_b = 8100;
 
-
-
+/**
+* void TIMER1_init() Initializes the correct ports and registers for moving the servo motor.
+*/
 void TIMER1_init()
 {
 	//***set GPIO PB5, turn on clk, alt. function, output, enable***
@@ -42,6 +42,14 @@ void TIMER1_init()
 	move_servo_absolute(0);
 }
 
+/**
+* void move_servo_absolute(float degree) Takes in an absolute degree value and moves the servo motor to that value if it is within 0 and 180 degrees.
+	    90
+		^
+		|
+180 <---+---> 0
+* @param degree	The degree value you want to move the servo to, from 0 to 180.
+*/ 
 void move_servo_absolute(float degree)
 {
 	if(degree > 180)
@@ -55,15 +63,22 @@ void move_servo_absolute(float degree)
 //	TIMER1_TBMATCHR_R = period_width - pulse_width; // set pulse width
 	// you need to call timer_waitMillis( ) here to enforce a delay for the servo to
 	// move to the position
-	timer_waitMillis(20);
+	timer_waitMillis(5);
 	curr_angle = degree;
 }
 
+/**
+* void move_servo_relative(float degree) Moves the servo motor to a value relative to the current value by calling move_servo_absolute with the current degree +/- input degree.
+* @param degree the input degree to move the servo relative to the current degree
+*/
 void move_servo_relative(float degree)
 {
 	move_servo_absolute(curr_angle + degree);
 }
 
+/**
+* void configure_servo() Configures the servo motor for use.
+*/
 void configure_servo()
 {
 	int i;
